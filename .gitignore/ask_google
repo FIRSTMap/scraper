@@ -1,0 +1,14 @@
+#!/bin/bash
+# ask_google
+# Gets lats and lons for places in the places file.  Sleeps a randomized
+# time between calls to avoid robot blockage
+awk -F\0 '
+    {
+       system("wget -Odata/google "
+              "\"https://www.google.com/maps/place/" $0 "\"");
+       "awk -F, -f make_latlng data/google" | getline lng;
+       "awk -F, -f make_latlng data/google" | getline lat;
+       close("awk -F, -f make_latlng data/google"); 
+       printf "%s|%.3f|%.3f\n",$0,lat,lng;
+       system(sprintf("sleep %d",3+10*rand()));
+    }' data/places 
