@@ -1,2 +1,0 @@
-#awk script used by ask_google
-/cacheResponse\(/ {printf "%.3f\n%.3f\n", $2, $3}
