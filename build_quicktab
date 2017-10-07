@@ -9,12 +9,15 @@ awk -F'"' '
             unicode[toupper(fld[1])]=toupper(fld[2]);
         }
 #for (a in unicode) print a, unicode[a] > "unicode-dump"
-        while (getline code < "data/country-2digit") {
-            split(code,fld,"\t"); 
-            ccode[fld[1]]=fld[2];
+        while (getline code < "data/countryInfo.txt") {
+             if(split(code,fld,"\t") > 4) {
+                ccode[fld[5]]=fld[1];
+             }
         }
         ccode["Chinese Taipei"]="TW";
-#for (a in ccode) print a, ccode[a] > "ccode-dump"
+        ccode["Czech Republic"]="CZ";
+        delete ccode[""];
+for (a in ccode) print a, ccode[a] > "ccode-dump"
         while (getline zip < "data/allCountries") {
             split(zip,fld,"\t");
             fld[1]=toupper(fld[1]);
@@ -140,8 +143,8 @@ awk -F'"' '
                 atts["lng"]=googlngs[place];
             } else {
                 print place > "data/places"
-                print "Did not find: place", place > "/dev/stderr"
-                print "You can find this with ./ask_google" > "/dev/stderr"
+                print "Did not find team "atts["key"]" @ place", place > "/dev/stderr"
+                #print "You can find this with ./ask_google" > "/dev/stderr"
             }
         }
         printf "%5d %10.3f %10.3f\n", atts["team_number"],

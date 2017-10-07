@@ -11,6 +11,5 @@ wget -O data/cities1000.readme \
         http://download.geonames.org/export/dump/readme.txt
 wget -O data/admin1CodesASCII.txt \
         http://download.geonames.org/export/dump/admin1CodesASCII.txt
-wget -Odata/cclist \
-        http://www.nationsonline.org/oneworld/country_code_list.htm
-./htm2tab
+wget -Odata/countryInfo.txt \
+        http://download.geonames.org/export/dump/countryInfo.txt

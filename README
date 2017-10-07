@@ -40,9 +40,6 @@ get_postal	Gets geocoding data from the web and formats some of it.
 		by build_quicktab
 		Automatically called directly from get_all_data
 
-htm2tab		converts a web table of country codes to a tab delimited format
-		called from get_postal
-
 make_latlng	extracts the lat/lon from a google place file.
 		called from ask_google
 
