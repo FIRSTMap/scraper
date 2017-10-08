@@ -73,6 +73,7 @@ for (a in ccode) print a, ccode[a] > "ccode-dump"
         # special fixes for Guam, zip weirdness, and some typoes
         if (country=="") {
             switch (zip) {
+                case /34340/                 country="TR"; break;
                 case /^[0-9]{4}$/:           country="AU"; break;
                 case /^[0-9]{5}$/:                        
                 case /^[0-9]{5}-[0-9]{4}$/:  country="US"; break;
