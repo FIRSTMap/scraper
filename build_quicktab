@@ -49,17 +49,20 @@ for (a in ccode) print a, ccode[a] > "ccode-dump"
             googlats[fld[1]] = fld[2];
             googlngs[fld[1]] = fld[3];
         }
-        start=1;
         print "read data files" > "/dev/stderr"
+
+        start=1;
+        dfmt="     %11s: %d,\n";
+        ffmt="     %11s: %.3f,\n";
+        afmt="     %11s: \"%s\"";
+        afmt1=afmt ",\n";
+        afmt2=afmt "\n    }";
+        tI="teamInfo.js";
+        printf "var teamInfo=[" > tI
     }
     /^ *\{/ {
         for (i=1; i<=length(idx); i++) {atts[idx[i]]="";}
-    }
-    /^ *"/ {field=$2;
-        t=gensub("\", *$","",1); 
-        sub(field,"",t);
-        sub("^[ :\",]*","",t);
-        atts[field]=t;
+        next;
     }
     /^ *\}/ {
         city=toupper(atts["city"]); 
@@ -73,7 +76,7 @@ for (a in ccode) print a, ccode[a] > "ccode-dump"
         # special fixes for Guam, zip weirdness, and some typoes
         if (country=="") {
             switch (zip) {
-                case /34340/                 country="TR"; break;
+                case /34340/:                country="TR"; break;
                 case /^[0-9]{4}$/:           country="AU"; break;
                 case /^[0-9]{5}$/:                        
                 case /^[0-9]{5}-[0-9]{4}$/:  country="US"; break;
@@ -82,6 +85,7 @@ for (a in ccode) print a, ccode[a] > "ccode-dump"
                 case /^[0-9]{7}$/:           country="IL"; break;
             }
         }
+        if (country=="SE" && match(zip,/^[0-9]{5}/)) zip=substr(zip,1,3) " " substr(zip,4,2);
         if (country=="US" && prov=="GUAM") country="GU";
         if (country=="CL" && prov=="REGION METROPOLITANA DE SANTIAGO") {
             prov="SANTIAGO METROPOLITAN";
@@ -142,6 +146,8 @@ for (a in ccode) print a, ccode[a] > "ccode-dump"
             if (place in googlats) {
                 atts["lat"]=googlats[place];
                 atts["lng"]=googlngs[place];
+                print place "|" atts["lat"] "|" atts["lng"] \
+                        "|" atts["team_number"] > "places2"
             } else {
                 print place > "data/places"
                 print "Did not find team "atts["key"]" @ place", place > "/dev/stderr"
@@ -150,4 +156,28 @@ for (a in ccode) print a, ccode[a] > "ccode-dump"
         }
         printf "%5d %10.3f %10.3f\n", atts["team_number"],
                 atts["lat"], atts["lng"] > "data/quicktab"
+        printf "%s\n    {\n", start?"":"," > tI;
+        printf dfmt,  "team_number", atts["team_number"] > tI;
+        printf dfmt,  "rookie_year", atts["rookie_year"] > tI;
+        printf ffmt,  "lat",         atts["lat"] > tI;
+        printf ffmt,  "lng",         atts["lng"] > tI;
+        printf afmt1, "website",     atts["website"] > tI;
+        printf afmt1, "nickname",    atts["nickname"] > tI;
+        printf afmt1, "motto",       atts["motto"] > tI;
+        printf afmt2, "location",    sprintf( \
+                        "%s, %s %s, %s", atts["city"],
+                        atts["state_prov"], atts["postal_code"],
+                        atts["country"]) > tI;
+        start=0;
+        next;
+    }
+    /^ *"/ {field=$2;
+        t=gensub("\", *$","",1); 
+        sub(field,"",t);
+        sub("^[ :\",]*","",t);
+        sub("[ :\",]*$","",t);
+        atts[field]=t;
+    }
+    END {
+        printf "\n]\n" > tI
     }' data/merged > data/quicktab

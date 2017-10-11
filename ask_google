@@ -4,7 +4,7 @@
 # time between calls to avoid robot blockage
 awk -F\0 '
     {
-       system("wget -Odata/google "
+       system("wget -Odata/google " \
               "\"https://www.google.com/maps/place/" $0 "\"");
        "awk -F, -f make_latlng data/google" | getline lng;
        "awk -F, -f make_latlng data/google" | getline lat;
