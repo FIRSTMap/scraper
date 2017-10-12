@@ -5,6 +5,7 @@ auth="?X-TBA-Auth-Key=$key$(cat TBA-auth)"
 year=$(cat YEAR)
 i=0;
 go=1
+TZ=utc date -Iseconds > team-time
 while /bin/true
 do	wget -O"data/teams.$i" "$api$year/$i$auth"
 	go=$(grep -c -s key "data/teams.$i")

@@ -3,7 +3,10 @@
 api="https://www.thebluealliance.com/api/v3/events/"
 auth="?X-TBA-Auth-Key=$(cat TBA-auth)"
 wget -Odata/events-full "$api$(cat year)$auth"
-gawk -F: ' BEGIN       {regct=0; disct=0}
+(echo "// Data extracted from thebluealliance.com at $(TZ=utc date -Iseconds)" 
+ echo "// Built by scraper at https://github/GeeII/Firstmap-scraper/"
+ echo
+ gawk -F: ' BEGIN       {regct=0; disct=0}
         /"abbreviation"/ {district=gensub("\"*, *$","",1,$2);  
                           gsub("^ *\"*","",district);}
         /"end_date"/     {end_date=gensub("\"*, *$","",1,$2);  
@@ -38,9 +41,9 @@ gawk -F: ' BEGIN       {regct=0; disct=0}
             }
         END {
 print "regct:",regct, "disct:", disct >> "/dev/stderr"
-                printf "var regionals = [\n\n  " 
+                printf "var regionals = [\n  " 
                 for (i=1; i<regct; i++) {printf "%s,\n  ",regionals[i];}
                 printf "%s\n]\n\n\nvar districts = [\n\n  ",regionals[regct];
                 for (i=1; i<disct; i++) {printf "%s,\n  ",districts[i];}
                 printf "%s\n]\n",districts[regct];
-            }' data/events-full > competitions.js
+            }' data/events-full ) > competitions.js

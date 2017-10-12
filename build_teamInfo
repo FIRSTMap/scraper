@@ -1,6 +1,10 @@
 #!/bin/bash
 # build_teamInfo
-awk -F'"' '
+(echo "// Data extracted from thebluealliance.com at $(cat team-time)"
+ echo "// Built by scraper at https://github/GeeII/Firstmap-scraper/"
+ echo "// using postal and gazeteer databases from GeoNames.org."
+ echo
+ gawk -F'"' '
     BEGIN {
         while (getline att<"attribs") {blank[att]="";};
         fields = asorti(blank, idx);
@@ -184,4 +188,4 @@ awk -F'"' '
     END {
         printf "\n]\n"
         printf "var geonames = %d\n", geonames
-    }' data/merged > teamInfo.js
+    }' data/merged ) > teamInfo.js
