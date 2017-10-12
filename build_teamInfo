@@ -1,0 +1,187 @@
+#!/bin/bash
+# build_teamInfo
+awk -F'"' '
+    BEGIN {
+        while (getline att<"attribs") {blank[att]="";};
+        fields = asorti(blank, idx);
+        while (getline code < "unicodes.ascii") {
+            split(code,fld," "); 
+            unicode[toupper(fld[1])]=toupper(fld[2]);
+        }
+#for (a in unicode) print a, unicode[a] > "unicode-dump"
+        while (getline code < "data/countryInfo.txt") {
+             if(split(code,fld,"\t") > 4) {
+                ccode[fld[5]]=fld[1];
+             }
+        }
+        ccode["Chinese Taipei"]="TW";
+        ccode["Czech Republic"]="CZ";
+        delete ccode[""];
+#for (a in ccode) print a, ccode[a] > "ccode-dump"
+        while (getline zip < "data/allCountries") {
+            split(zip,fld,"\t");
+            fld[1]=toupper(fld[1]);
+            fld[2]=toupper(fld[2]);
+            ziplats[fld[1] "|" fld[2]]=fld[10];
+            ziplngs[fld[1] "|" fld[2]]=fld[11];
+        }
+#for (a in ziplats) print a, ziplats[a] > "ziplats-dump"
+#for (a in ziplngs) print a, ziplngs[a] > "ziplngs-dump"
+        while (getline adm < "data/admin1CodesASCII.txt") {
+            split(adm,fld,"\t");
+            adms[fld[1]]=toupper(fld[3]);
+        }
+#for (a in adms) print a, adms[a] > "adms-dump"
+        while (getline citi < "data/cities1000") {
+            split(citi,fld,"\t");
+            fld[3]=toupper(fld[3]);
+            citilats[fld[9] "|" adms[fld[9] "." fld[11]] "|" fld[3]]=fld[5];
+            citilngs[fld[9] "|" adms[fld[9] "." fld[11]] "|" fld[3]]=fld[6];
+            if (fld[9]=="TW") {
+                citilats[fld[9] "|" fld[3] "|" fld[3]]=fld[5];
+                citilngs[fld[9] "|" fld[3] "|" fld[3]]=fld[6];
+            }
+        }
+#for (a in citilats) print a, citilats[a] > "citilats-dump"
+#for (a in citilngs) print a, citilngs[a] > "citilngs-dump"
+        while (getline goog < "geo_cache") {
+            split(goog,fld,"|");
+            googlats[fld[1]] = fld[2];
+            googlngs[fld[1]] = fld[3];
+        }
+        print "read data files" > "/dev/stderr"
+
+	geonames=0;
+        start=1;
+        dfmt="     %11s: %d,\n";
+        ffmt="     %11s: %.3f,\n";
+        afmt="     %11s: \"%s\"";
+        afmt1=afmt ",\n";
+        afmt2=afmt "\n    }";
+        printf "var teamInfo=["
+    }
+    /^ *\{/ {
+        for (i=1; i<=length(idx); i++) {atts[idx[i]]="";}
+        next;
+    }
+    /^ *\}/ {
+        city=toupper(atts["city"]); 
+        sub(" *$","",city);
+        for (c in unicode) {gsub(c,unicode[c],city);}
+        country=ccode[atts["country"]];
+        prov=toupper(atts["state_prov"]);
+        for (c in unicode) {gsub(c,unicode[c],prov);}
+        zip=atts["postal_code"];
+
+        # special fixes for Guam, zip weirdness, and some typoes
+        if (country=="") {
+            switch (zip) {
+                case /93810/:                country="IL"; break;
+                case /^[0-9]{4}$/:           country="AU"; break;
+                case /^[0-9]{5}$/:                        
+                case /^[0-9]{5}-[0-9]{4}$/:  country="US"; break;
+                case /^[A-Z][0-9][A-Z] [0-9][A-Z][0-9]$/:
+                                             country="CA"; break;
+                case /^[0-9]{7}$/:           country="IL"; break;
+            }
+        }
+        if (country=="SE" && match(zip,/^[0-9]{5}/)) zip=substr(zip,1,3) " " substr(zip,4,2);
+        if (country=="US" && prov=="GUAM") country="GU";
+        if (country=="US" && prov=="PUERTO RICO") country="PR";
+        if (country=="CL" && prov=="REGION METROPOLITANA DE SANTIAGO") {
+            prov="SANTIAGO METROPOLITAN";
+        }
+        if (country=="CN" && prov=="HUNAN") {
+            prov="HENAN";
+        }
+        if (country=="GR" && prov=="THESSALIA") {
+            prov="THESSALY";
+        }
+        if (country=="MX" && city=="SAN LUIS POTOTOSI") {
+            city="SAN LUIS POTOSI";
+        }
+        if (country=="MX" && prov=="DISTRITO FEDERAL") {
+            prov="MEXICO CITY";
+        }
+        if (country=="TR" && city=="CEKMEKOY") {
+            city="CEKMEKOEY";
+        }
+        if (country=="US" && city=="NEW YORK") {
+            city="NEW YORK CITY";
+        }
+        if (country=="US" && prov =="PA" && city=="WARMINSTER") {
+            city="WARMINSTER HEIGHTS";
+        }
+        if (country=="US" && prov =="MO" && city=="LEES SUMMIT") {
+            city="LEE\047S SUMMIT";
+        }
+        if (country=="NL" && prov =="NOORD-BRABANT") {
+            prov = "NORTH BRABANT";
+        }
+        if (country=="DO" && prov =="SANTO DOMINGO" && city==prov) {
+            prov="NACIONAL";
+        }
+        if (country=="IL") {
+            if (prov=="HAMERKAZ (CENTRAL)") prov="CENTRAL DISTRICT";
+            if (prov=="HAZAFON (NORTHERN)") prov="NORTHERN DISTRICT";
+            if (prov=="HADAROM (SOUTHERN)") prov="SOUTHERN DISTRICT";
+            if (prov=="TEL-AVIV") prov="TEL AVIV";
+        }
+        if (country=="JP" && length(zip)==7) {
+            sub("...","&-",zip);
+        }
+        if (country == "CA") zip=substr(zip,1,3); # special for Canada
+        # end fixes
+
+        lat="";
+        lon="";
+        if ((country "|" zip) in ziplats) {
+            atts["lat"]=ziplats[country "|" zip];
+            atts["lng"]=ziplngs[country "|" zip];
+            geonames++;
+        } else if ((country "|" prov "|" city) in citilats) {
+            atts["lat"]=citilats[country "|" prov "|" city];
+            atts["lng"]=citilngs[country "|" prov "|" city];
+            geonames++;
+        } else {
+            place=sprintf("%s, %s %s, %s",city, prov, zip, country);
+            if (place in googlats) {
+                atts["lat"]=googlats[place];
+                atts["lng"]=googlngs[place];
+#print place "|" atts["lat"] "|" atts["lng"] "|" atts["team_number"] > "places2"
+            } else {
+                print place > "data/places"
+                print "Did not find team "atts["key"]" @ place", place > "/dev/stderr"
+                #print "You can find this with ./ask_google" > "/dev/stderr"
+            }
+        }
+#       printf "%5d %10.3f %10.3f\n", atts["team_number"], atts["lat"], atts["lng"] > "data/quicktab"
+#printf "%s.%s|%.3f|%.3f|%5d|\n", country, prov, atts["lat"], atts["lng"], atts["team_number"] > "provcheck"
+        printf "%s\n    {\n", start?"":","
+        printf dfmt,  "team_number", atts["team_number"]
+        printf dfmt,  "rookie_year", atts["rookie_year"]
+        printf ffmt,  "lat",         atts["lat"]
+        printf ffmt,  "lng",         atts["lng"]
+        printf afmt1, "website",     atts["website"]
+        printf afmt1, "nickname",    atts["nickname"]
+        printf afmt1, "motto",       atts["motto"]
+        printf afmt2, "location",    sprintf( \
+                        "%s, %s %s, %s", atts["city"],
+                        atts["state_prov"], atts["postal_code"],
+                        atts["country"])
+        start=0;
+        next;
+    }
+    /^ *"/ {field=$2;
+        t=gensub("\", *$","",1); 
+        sub(field,"",t);
+        sub("^[ :\",]*","",t);
+        sub("[ :\",]*$","",t);
+        sub(/\\$/,"&\"",t);
+        atts[field]=t;
+#printf "%s|%s|\n",field,t > "attparser"
+    }
+    END {
+        printf "\n]\n"
+        printf "var geonames = %d\n", geonames
+    }' data/merged > teamInfo.js
