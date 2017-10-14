@@ -1,6 +1,6 @@
 #!/bin/bash
 # build_teamInfo
-(echo "// Data extracted from thebluealliance.com at $(cat team-time)"
+(echo "// Data extracted from thebluealliance.com at $(cat data/team-time)"
  echo "// Built by scraper at https://github/GeeII/Firstmap-scraper/"
  echo "// using postal and gazeteer databases from GeoNames.org."
  echo
@@ -80,10 +80,14 @@
         # special fixes for Guam, zip weirdness, and some typoes
         if (country=="") {
             switch (zip) {
+                case /11073/:                country="TW"; break;
+                case /34912/:                country="TR"; break;
+                case /34469/:                country="TR"; break;
                 case /93810/:                country="IL"; break;
                 case /^[0-9]{4}$/:           country="AU"; break;
                 case /^[0-9]{5}$/:                        
                 case /^[0-9]{5}-[0-9]{4}$/:  country="US"; break;
+                case /^[0-9]{5}-[0-9]{3}$/:  country="BR"; break;
                 case /^[A-Z][0-9][A-Z] [0-9][A-Z][0-9]$/:
                                              country="CA"; break;
                 case /^[0-9]{7}$/:           country="IL"; break;
