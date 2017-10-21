@@ -3,10 +3,9 @@ Readme file for FIRSTmap scraper #2
 This scraper is likely to be a high-maintenance item, as there are a number
     of hacks to work around incomplete team info from thebluealliance, and
     differences between place names in different databases.  To use this,
-    copy/extract the files to a directory, get an api key from
-    thebluealliance.com and store it in TBA-auth, then run "./get_all_data"
+    copy/extract/clone the files to a directory, then run "./get_all_data"
 
-By Gus "GeeTwo" Michel II, 7 Oct 2017
+Last updated by Gus "GeeTwo" Michel II, 21 Oct 2017
 
 README    	This file
 

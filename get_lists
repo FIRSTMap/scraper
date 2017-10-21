@@ -1,7 +1,7 @@
 #!/bin/bash
 # get_lists
 api="https://www.thebluealliance.com/api/v3/teams/"
-auth="?X-TBA-Auth-Key=$key$(cat TBA-auth)"
+auth="?X-TBA-Auth-Key=$(cat TBA-auth)"
 year=$(cat YEAR)
 i=0;
 go=1
