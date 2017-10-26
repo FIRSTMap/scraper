@@ -43,11 +43,19 @@
         while (getline citi < "data/cities1000") {
             split(citi,fld,"\t");
             fld[3]=toupper(fld[3]);
-            citilats[fld[9] "|" adms[fld[9] "." fld[11]] "|" fld[3]]=fld[5];
-            citilngs[fld[9] "|" adms[fld[9] "." fld[11]] "|" fld[3]]=fld[6];
+            adm = adms[fld[9] "." fld[11]]
+            citilats[fld[9] "|" adm "|" fld[3]]=fld[5];
+            citilngs[fld[9] "|" adm "|" fld[3]]=fld[6];
             if (fld[9]=="TW") {
                 citilats[fld[9] "|" fld[3] "|" fld[3]]=fld[5];
                 citilngs[fld[9] "|" fld[3] "|" fld[3]]=fld[6];
+            } else if (fld[9]=="IL") {
+              # Israel has bad districts and alternate city names
+                split(toupper(fld[4]),alt,",");
+                for (i in alt) {
+                    citilats["IL|0|" alt[i]]=fld[5];
+                    citilngs["IL|0|" alt[i]]=fld[6];
+                }
             }
         }
 #for (a in citilats) print a, citilats[a] > "citilats-dump"
@@ -134,10 +142,11 @@
             prov="NACIONAL";
         }
         if (country=="IL") {
-            if (prov=="HAMERKAZ (CENTRAL)") prov="CENTRAL DISTRICT";
-            if (prov=="HAZAFON (NORTHERN)") prov="NORTHERN DISTRICT";
-            if (prov=="HADAROM (SOUTHERN)") prov="SOUTHERN DISTRICT";
-            if (prov=="TEL-AVIV") prov="TEL AVIV";
+            #if (prov=="HAMERKAZ (CENTRAL)") prov="CENTRAL DISTRICT";
+            #if (prov=="HAZAFON (NORTHERN)") prov="NORTHERN DISTRICT";
+            #if (prov=="HADAROM (SOUTHERN)") prov="SOUTHERN DISTRICT";
+            #if (prov=="TEL-AVIV") prov="TEL AVIV";
+            prov="IL"
         }
         if (country=="JP" && length(zip)==7) {
             sub("...","&-",zip);

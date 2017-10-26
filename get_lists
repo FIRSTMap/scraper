@@ -11,7 +11,7 @@ do	wget -O"data/teams.$i" "$api$year/$i$auth"
 	go=$(grep -c -s key "data/teams.$i")
 	if [ $go -ge 1 ] 
 	then	echo "got data/teams.$i"
-	else	echo "emty file for data/teams.$i; terminating"
+	else	echo "empty file for data/teams.$i; terminating"
 		rm "data/teams.$i"
 		exit 0
 	fi
