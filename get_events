@@ -1,0 +1,36 @@
+#!/bin/bash -f
+#get_events
+api="https://www.thebluealliance.com/api/v3/events/"
+auth="?X-TBA-Auth-Key=$(cat TBA-auth)"
+wget -Odata/events-full "$api$(cat year)$auth"
+(echo "// Data extracted from thebluealliance.com at $(TZ=utc date -Iseconds)" 
+ echo "// Built by scraper at https://github/GeeII/Firstmap-scraper/"
+ echo
+ gawk -F: ' BEGIN       {first=1
+                printf "var events = [" 
+            }
+        /"abbreviation"/ {district=gensub("\"*, *$","",1,$2);  
+                          gsub("^ *\"*","",district);}
+        /"event_type"/   {event_type=gensub("\"*, *$","",1,$2);
+                          gsub("^ *\"*","",event_type);}
+        /"short_name"/   {short_name=gensub("\"*, *$","",1,$2);      
+                          gsub("^ *\"*","",short_name);}
+        /"name"/         {name=gensub("\"*, *$","",1,$2);      
+                          gsub("^ *\"*","",name);}
+        /"key"/          {key=gensub("\"*, *$","",1,$2);       
+                          gsub("^ *\"*","",key);}
+        /"lat"/          {lat=gensub("\"*, *$","",1,$2);       
+                          gsub("^ *\"*","",lat);}
+        /"lng"/          {lng=gensub("\"*, *$","",1,$2);       
+                          gsub("^ *\"*","",lng);}
+        /^ }/ { 
+                if (lat=="null" && key="2018chcmp") {lat=38.217;lng=-78.342;}
+                printf "%s\n    {\"key\": \"%s\", \"lat\": %.4f, \"lng\": %.4f, \"type\": \"%s\", \"name\": \"%s\"}",
+                    first ? "" : ",", key, lat, lng, event_type==0 ? "regional":((event_type==3||event_type==4)?"championship":(event_type>98)?"offseason":"district"), 
+                    (length(short_name)>0) ? short_name: name
+                    #(event_type==0 || event_type==4) ? name : toupper(district) " District"
+                first=0;
+                }
+        END {
+                printf "\n]\n"
+            }' data/events-full ) > events.js

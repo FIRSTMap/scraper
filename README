@@ -20,7 +20,7 @@ geo_cache	pipe delimited file <location string>|<latitude>|<longitude>
 attribs		A list of the team attributes on V3 of thebluealliance API
 		Used by build_teamInfo
 
-build_teamInfo	Builds teamInfo.js from merged.js and georef data
+build_teamInfo	Builds teams.js from merged.js and georef data
 		Automatically called directly from get_all_data
 
 get_all_data	The main script which runs the others (except ask_google)
@@ -28,8 +28,8 @@ get_all_data	The main script which runs the others (except ask_google)
 		builds comps.js and teamInfo.js.  Stores intermediate
 		results in data subdirectory, which it creates
 
-get_comps	gets the events list from thebluealliance and builds
-		comps.js.  Uses lat and lng fields from TBA.
+get_events	gets the events list from thebluealliance and builds
+		events.js.  Uses lat and lng fields from TBA.
 		Automatically called directly from get_all_data
 
 get_lists	gets team lists from thebluealliance.com.
@@ -49,7 +49,7 @@ merge_lists	merges the team "page" lists into one file
 TBA-auth	A file containing a TBA authorization string.
 		This is not in the repository, as each user is
 		expected to get his/her own.
-		Used by get_lists and get_comps.
+		Used by get_lists and get_events.
 
 unicodes.ascii	Conversion table from unicodes found in team
 		place names to ascii characters; drops

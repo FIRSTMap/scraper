@@ -1,11 +1,11 @@
 #!/bin/bash
 # build_teamInfo
 (echo "// Data extracted from thebluealliance.com at $(cat data/team-time)"
- echo "// Built by scraper at https://github/GeeII/Firstmap-scraper/"
+ echo "// Built by scraper at https://github.com/GeeII/Firstmap-scraper"
  echo "// using postal and gazeteer databases from GeoNames.org."
- echo) > teamInfo.js
+ echo) > teams.js
 (echo "// Data extracted from thebluealliance.com at $(cat data/team-time)"
- echo "// Built by scraper at https://github/GeeII/Firstmap-scraper/"
+ echo "// Built by scraper at https://github.com/GeeII/Firstmap-scraper"
  echo "// using postal and gazeteer databases from GeoNames.org."
  echo
  gawk -F'"' '
@@ -53,13 +53,13 @@
               # Israel has bad districts and alternate city names
                 split(toupper(fld[4]),alt,",");
                 for (i in alt) {
-                    citilats["IL|0|" alt[i]]=fld[5];
-                    citilngs["IL|0|" alt[i]]=fld[6];
+                    citilats["IL|IL|" alt[i]]=fld[5];
+                    citilngs["IL|IL|" alt[i]]=fld[6];
                 }
             }
         }
-#for (a in citilats) print a, citilats[a] > "citilats-dump"
-#for (a in citilngs) print a, citilngs[a] > "citilngs-dump"
+for (a in citilats) print a, citilats[a] > "citilats-dump"
+for (a in citilngs) print a, citilngs[a] > "citilngs-dump"
         while (getline goog < "geo_cache") {
             split(goog,fld,"|");
             googlats[fld[1]] = fld[2];
@@ -73,8 +73,8 @@
         afmt="     %11s: \"%s\"";
         afmt1=afmt ",\n";
         afmt2=afmt "\n    }";
-        printf "var teamInfo=["
-        printf "var teamInfo=[" >> "teamInfo.js"
+        printf "var teams=["
+        printf "var teams = [" >> "teams.js"
     }
     /^ *\{/ {
         for (i=1; i<=length(idx); i++) {atts[idx[i]]="";}
@@ -174,9 +174,9 @@
                 #print "You can find this with ./ask_google" > "/dev/stderr"
             }
         }
-        printf "%s\n   {team_number:%4d,lat:%7.3f,lng:%8.3f}",
+        printf "%s\n   {\"team_number\": %4d, \"lat\":%7.3f, \"lng\": %8.3f}",
            start?"":",", atts["team_number"],
-           atts["lat"], atts["lng"] >> "teamInfo.js"
+           atts["lat"], atts["lng"] >> "teams.js"
 #printf "%s.%s|%.3f|%.3f|%5d|\n", country, prov, atts["lat"], atts["lng"], atts["team_number"] > "provcheck"
         printf "%s\n    {\n", start?"":","
         printf dfmt,  "team_number", atts["team_number"]
@@ -204,5 +204,5 @@
     }
     END {
         printf "\n]\n"
-        printf "\n]\n" >> "teamInfo.js"
+        printf "\n]\n" >> "teams.js"
     }' data/merged ) > teamFullInfo.js
