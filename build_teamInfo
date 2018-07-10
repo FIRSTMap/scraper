@@ -1,11 +1,11 @@
 #!/bin/bash
 # build_teamInfo
 (echo "// Data extracted from thebluealliance.com at $(cat data/team-time)"
- echo "// Built by scraper at https://github.com/GeeII/Firstmap-scraper"
+ echo "// Built by scraper at https://github.com/FIRSTMap/FIRSTMap-scraper"
  echo "// using postal and gazeteer databases from GeoNames.org."
  echo) > teams.js
 (echo "// Data extracted from thebluealliance.com at $(cat data/team-time)"
- echo "// Built by scraper at https://github.com/GeeII/Firstmap-scraper"
+ echo "// Built by scraper at https://github.com/FIRSTMap/FIRSTMap-scraper"
  echo "// using postal and gazeteer databases from GeoNames.org."
  echo
  gawk -F'"' '

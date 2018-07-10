@@ -4,7 +4,7 @@ api="https://www.thebluealliance.com/api/v3/events/"
 auth="?X-TBA-Auth-Key=$(cat TBA-auth)"
 wget -Odata/events-full "$api$(cat year)$auth"
 (echo "// Data extracted from thebluealliance.com at $(TZ=utc date -Iseconds)" 
- echo "// Built by scraper at https://github/GeeII/Firstmap-scraper/"
+ echo "// Built by scraper at https://github.com/FIRSTMap/FIRSTMap-scraper"
  echo
  gawk -F: ' BEGIN       {first=1
                 printf "var events = [" 
