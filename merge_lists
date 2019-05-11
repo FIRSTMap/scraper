@@ -3,6 +3,7 @@
 # merges the 50-team data files into a single file, and slims down the
 # home_championship attribute to an atomic value.
 year=$(cat YEAR)
+year=2018
 files=$(echo data/teams.? data/teams.??)
 echo $files
 awk -F'\0' 'BEGIN {start=1; wai=0}
