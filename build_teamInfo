@@ -1,14 +1,6 @@
 #!/bin/bash
 # build_teamInfo
-(echo "// Data extracted from thebluealliance.com at $(cat data/team-time)"
- echo "// Built by scraper at https://github.com/FIRSTMap/FIRSTMap-scraper"
- echo "// using postal and gazeteer databases from GeoNames.org."
- echo) > teams.js
-(echo "// Data extracted from thebluealliance.com at $(cat data/team-time)"
- echo "// Built by scraper at https://github.com/FIRSTMap/FIRSTMap-scraper"
- echo "// using postal and gazeteer databases from GeoNames.org."
- echo
- gawk -F'"' '
+(gawk -F'"' '
     BEGIN {
         while (getline att<"attribs") {blank[att]="";};
         fields = asorti(blank, idx);
@@ -73,8 +65,8 @@ for (a in citilngs) print a, citilngs[a] > "citilngs-dump"
         afmt="     %11s: \"%s\"";
         afmt1=afmt ",\n";
         afmt2=afmt "\n    }";
-        printf "var teams=["
-        printf "var teams = [" >> "teams.js"
+        printf "["
+        printf "[" >> "teams.json"
     }
     /^ *\{/ {
         for (i=1; i<=length(idx); i++) {atts[idx[i]]="";}
@@ -176,7 +168,7 @@ for (a in citilngs) print a, citilngs[a] > "citilngs-dump"
         }
         printf "%s\n   {\"team_number\": %4d, \"lat\":%7.3f, \"lng\": %8.3f}",
            start?"":",", atts["team_number"],
-           atts["lat"], atts["lng"] >> "teams.js"
+           atts["lat"], atts["lng"] >> "teams.json"
 #printf "%s.%s|%.3f|%.3f|%5d|\n", country, prov, atts["lat"], atts["lng"], atts["team_number"] > "provcheck"
         printf "%s\n    {\n", start?"":","
         printf dfmt,  "team_number", atts["team_number"]
@@ -204,5 +196,5 @@ for (a in citilngs) print a, citilngs[a] > "citilngs-dump"
     }
     END {
         printf "\n]\n"
-        printf "\n]\n" >> "teams.js"
-    }' data/merged ) > teamFullInfo.js
+        printf "\n]\n" >> "teams.json"
+    }' data/merged ) > teamFullInfo.json
