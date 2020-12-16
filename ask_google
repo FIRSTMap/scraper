@@ -11,4 +11,4 @@ awk -F\0 '
        close("awk -F, -f make_latlng data/google"); 
        printf "%s|%.3f|%.3f\n",$0,lat,lng;
        system(sprintf("sleep %d",3+10*rand()));
-    }' data/places 
+    }' cache/broken_places 
