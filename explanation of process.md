@@ -1,9 +1,16 @@
-## Here's what happens:
+# Here's what happens:
 
-### New Process:
-...
+## New Process:
+[scraper.py](scraper.py) contains all code for the program. Please refer to the inline comments for documentation. The program uses the Python library tbapy (`pip3 install tbapy`) to get data from The Blue Alliance. The program was build on Python 3. Some adjustments to the process have been made that make more sense in Python. For example, instead of having separate ziplats and ziplngs tables, there is one table called zipLocs that contains both lattitude and longitude data for each location.
 
-### Old Process:
+List of what replaces what:
+ - ./get_postal is replaced by the get_geonames_data and load_geonames_data function.
+ - ./get_events is obsolete.
+ - ./get_lists and ./merge_lists are replaced by tbapy, which is used in the get_team_data function.
+ - ./merge_lists is replaced by the load_geonames_data and process_team_data functions.
+ - The unicodes.ascii file is replaced by the strip_unicode function.
+
+## Old Process:
 This process was written with commit [a54b2a6](https://github.com/FIRSTMap/scraper/commit/a54b2a6422ca2a3eb879927a95f30b4784cf31f7), so all references to lines in files are from then. HOWEVER, merge_lists needed the year updated to the year in the `YEAR` file (2020 as of now), otherwise merge_lists will fail.
 
 Note: awk indices (at least for tables made with the split function) are one-based, so the column with index 1 is the same as column 1 and the first column.
@@ -21,13 +28,13 @@ Run ./get_all_data
     - Only leaves one value (for the current `YEAR`) for the home championship of each team instead of a dictionary for each year for each team.
 5. ./build_teamInfo is run. Note: input file is `data/merged`. Output is `teamFullInfo.json`. AWK record separator is `"` (so basically, split each line of the file on `"`).
     - Has a prebuilt list of fields loaded from a file called `attribs`. The fields are loaded into a list called `idx` (lines 5-6).
-    - \[Lines 7-10\]: Load the unicode -> ascii table from `unicodes.ascii` is stored in a table called unicode (where the key is the unicode character escape sequence in upper case and the value is the ascii character that is similar (also uppercase) (this table translates characters like ä to a)) TODO: figure out why this is necessary.
+    - \[Lines 7-10\]: Load the unicode -> ascii table from `unicodes.ascii` is stored in a table called unicode (where the key is the unicode character escape sequence in upper case and the value is the ascii character that is similar (also uppercase) (this table translates characters like ä to a)). This is used later in the program to make using GeoNames data easier.
     - \[Line 11\]: (Commented out) dump the unicode/ascii table to file `unicode-dump`.
-    - \[Lines 12-16\]: Takes each line in `data/countryInfo.txt`, splits the lines by \\t (tab), then creates a table (called `ccode` for country codes) where each key is the fifth column and each value is the first column of each line. Basically, it makes they keys of the table the country names (the fifth column of `data/countryInfo.txt`) and the values of the table the country codes (the first column). Note: it appears that the comments in `data/countryInfo.txt` are treated as normal lines with no negative outcome, but it might be a good idea to look into actually skipping lines that start with `#`.
+    - \[Lines 12-16\]: Takes each line in `data/countryInfo.txt`, splits the lines by \\t (tab), then creates a table (called `ccode` for country codes) where each key is the fifth column and each value is the first column of each line. Basically, it makes the keys of the table the country names (the fifth column of `data/countryInfo.txt`) and the values of the table the country codes (the first column). Note: it appears that the comments in `data/countryInfo.txt` are treated as normal lines with no negative outcome, but it might be a good idea to look into actually skipping lines that start with `#`.
     - \[Lines 17-18\]: Add country codes for Czech Republic (CZ) and Chinese Taipei (TW) because those are the names used by FIRST/TBA, but `data/countryInfo.txt` has those countries listed as Czechia Prague and Taiwan, respectively.
     - \[Line 19\]: Delete the empty string key from the `ccode` table (TODO figure out why this is important, probably something to do with if the country name is an empty string and this could end up being filled in into the table maybe with the comments in `data/countryInfo.txt` not being ignored, etc.).
     - \[Line 20\]: (Commented out) dump all country codes to file `ccode-dump`.
-    - \[Lines 21-27\]: Split each line of `data/allCountries` on \\t (tab). Creates a table called `ziplats` where the key is the first column and the second column concatenated together with a | in the middle (first + "|" + second), and where the value is the tenth column. Creates a table called `ziplngs` where the key is the same as for `ziplats` and the value is the eleventh column.
+    - \[Lines 21-27\]: Split each line of `data/allCountries` on \\t (tab). Creates a table called `ziplats` where the key is the first column (in all uppercase) and the second column (in all uppercase) concatenated together with a | in the middle (first + "|" + second), and where the value is the tenth column. Creates a table called `ziplngs` where the key is the same as for `ziplats` and the value is the eleventh column.
     - \[Lines 28-29\]: (Commented out) dump `ziplats` and `ziplngs` to files `ziplats-dump` and `ziplngs-dump`, respectively.
     - \[Lines 30-33\]: Go through each line of `data/admin1CodesASCII.txt` and split into columns by \\t (tab). Create a table called adms with the key equal to the admin code (column 1), and the value equal to the administrative division name in ascii (in English) (column 3) in upper case.
     - \[Line 34\]: (Commented out) dump `adms` to file `adms-dump`.
@@ -79,12 +86,12 @@ Run ./get_all_data
             - \[Line 147\]: \[Comment on line 147: end fixes\].
         - \[Lines 149-168\]: Get the lat and lng coordinates for the team and store them in `atts["lat"]` and `atts["lng"]`.
             - \[Lines 149-150\]: Define variables `lat` and `lon`, both with values equal to an empty string. These appear to be unused, and are maybe left over from some previous version of the code.
-            - \[Lines 151-153\]: Written in pseudocode, `key = country + "|' + zip`. If `ziplats` contains the key (`key`), `atts["lat"]` is set to `ziplats[key]` and `atts["lng"]` is set to `ziplngs[key]`.
-            - \[Lines 154-156\]: Else, do the following: Written in pseudocode, `key = country + "|' + prov + "|" + city`. If `citilats` contains the key (`key`), `atts["lat"]` is set to `citilats[key]` and `atts["lng"]` is set to `citilngs[key]`.
-            - \[Lines 157-168\]: Else, do the following: Written in pseudocode, `place = city + ", " + prov + zip + ", " + country"`. If `googlats` contains the key (`place`), `atts["lat"]` is set to `googlats[key]` and `atts["lng"]` is set to `googlngs[key]`. Else, write `place` to the file `data/places`, and print `"Did not find team " + atts["key"] + " @ place " + " " + place` to standard error. The place will then have to be resolved with the ask_google script.
+            - \[Lines 151-153\]: Written in pseudocode, `key = country + "|" + zip`. If `ziplats` contains the key (`key`), `atts["lat"]` is set to `ziplats[key]` and `atts["lng"]` is set to `ziplngs[key]`.
+            - \[Lines 154-156\]: Else, do the following: Written in pseudocode, `key = country + "|" + prov + "|" + city`. If `citilats` contains the key (`key`), `atts["lat"]` is set to `citilats[key]` and `atts["lng"]` is set to `citilngs[key]`.
+            - \[Lines 157-168\]: Else, do the following: Written in pseudocode, `place = city + ", " + prov + " " + zip + ", " + country"`. If `googlats` contains the key (`place`), `atts["lat"]` is set to `googlats[key]` and `atts["lng"]` is set to `googlngs[key]`. Else, write `place` to the file `data/places`, and print `"Did not find team " + atts["key"] + " @ place " + place` to standard error. The place will then have to be resolved with the ask_google script.
             - \[Lines 169-171\]: Print the following attributes from `atts` to `teams.json` (in JSON format with one object for each team): `team_number`, `lat`, and `lng`.
             - \[Lines 173-185\]: Prints in the same format to `teamFullInfo.json`, except with the attributes `team_number`, `rookie_year`, `lat`, `lng`, `website`, `nickname`, `motto`, and `location` in the format of `place` specified in the description of lines 157-168 above.
             - \[Line 186\]: `next;`
-    - \[Lines 188-196\]: Match lines that start with any amount of spaces (including 0) (that haven't been matched already by the `{` and `}` checks). Store the keys and values of each line in the `atts` table (basically, parse all the attributes of the team from the JSON).
+    - \[Lines 188-196\]: Match lines that start with any amount of spaces (including 0) and a `"` (lines that haven't been matched already by the `{` and `}` checks). Store the keys and values of each line in the `atts` table (basically, parse all the attributes of the team from the JSON).
 
 Run ./ask_google for any team location information that wasn't sucessfully resolved.
