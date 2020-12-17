@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 MIT License
 
@@ -45,6 +46,9 @@ YEAR = Path('YEAR').read_text().strip()
 
 CACHE_DIR = Path.cwd() / 'cache'
 
+# When the lattitude/longitude location of a place cannot be found, it is put
+# into the broken_places file. This file is deleted (and recreated if needed)
+# with each run of the scraper.
 BROKEN_PLACES_FILE = CACHE_DIR / 'broken_places'
 
 # What files to download, name to save them as (within CACHE_DIR), and whether or not they need to be unzipped.
@@ -191,7 +195,7 @@ def load_geonames_data():
         longitude coordinates for every zip code of every country in
         allCountries.txt.
     """
-    print ("Loading zip code locations...")
+    print("Loading zip code locations...")
     geoNames['zipLocs'] = {}
 
     # Fill in the zipLocs table with data from CACHE_DIR/allCountries.txt
@@ -376,41 +380,33 @@ def process_team_data():
         # Only include the home_championship attribute for the current year
         homeChamp = team.get('home_championship')
         if homeChamp:
-            team.home_championship = team.home_championship.get(YEAR)
+            team['home_championship'] = homeChamp.get(YEAR)
 
         # Get the team's city name and convert it to uppercase and ASCII (must
         # be converted to ASCII because load_geonames_data loads location names
         # as ASCII). Also remove leading and trailing spaces from the city name
         # because sometimes the city name comes with them.
-        cityNoFormat = team.get('city')
-        if cityNoFormat is None:
-            cityNoFormat = ''
+        cityNoFormat = team.get('city') or ''
         city = strip_unicode(cityNoFormat.upper().strip(' '))
         
         # Get the country code for the team's country.
-        countryCodeNoFormat = geoNames['ccodes'].get(team.get('country'))
-        if countryCodeNoFormat is None:
-            countryCodeNoFormat = ''
-        countryCode = countryCodeNoFormat
+        countryCode = geoNames['ccodes'].get(team.get('country')) or ''
 
         # Get the team's state/provice/administrative division and convert to
         # uppercase ASCII.
-        provNoFormat = team.get('state_prov')
-        if provNoFormat is None:
-            provNoFormat = ''
+        provNoFormat = team.get('state_prov') or ''
         province = strip_unicode(provNoFormat.upper())
 
         # Team's postal code
-        zipCode = team.get('postal_code')
-
-        if zipCode is None:
-            zipCode = ''
+        zipCode = team.get('postal_code') or ''
 
         # Needs to be uppercase (postal codes in some countries have letters)
         zipCode = zipCode.upper()
 
         # ====== special fixes for Guam, zip weirdness, and some typoes ======
-        if not countryCode:
+        if not countryCode and zipCode:
+            # If there is no country code, determine it by the format of the
+            # postal code.
             if zipCode == '11073':
                 countryCode = 'TW'
             elif zipCode == '34912' or zipCode == '34469':
@@ -429,12 +425,21 @@ def process_team_data():
                 countryCode = 'IL'
 
         if countryCode == 'SE' and re.search('^[0-9]{5}', zipCode):
+            # For Sweden, put a space between the first three and last two
+            # postal code digits (e.g., 12345 becomes 123 45)
             zipCode = f'{zipCode[0:3]} {zipCode[3:5]}'
+
         if countryCode == 'US':
             if province == 'GUAM':
                 countryCode = 'GU'
             elif province == 'PUERTO RICO':
                 countryCode = 'PR'
+            elif city == 'NEW YORK':
+                city = 'NEW YORK CITY'
+            elif province == 'PA' and city == 'WARMINSTER':
+                city = 'WARMINSTER HEIGHTS'
+            elif province =='MO' and city == 'LEES SUMMIT':
+                city = "LEE'S SUMMIT"
         
         if countryCode == 'CL' and province == 'REGION METROPOLITANA DE SANTIAGO':
             province = 'SANTIAGO METROPOLITAN'
@@ -445,23 +450,14 @@ def process_team_data():
         if countryCode == 'GR' and province == 'THESSALIA':
             province = 'THESSALY'
 
-        if countryCode == 'MX' and city == 'SAN LUIS POTOTOSI':
-            city = 'SAN LUIS POTOSI'
-
-        if countryCode == 'MX' and province == 'DISTRITO FEDERAL':
-            province = 'MEXICO CITY'
+        if countryCode == 'MX':
+            if city == 'SAN LUIS POTOTOSI':
+                city = 'SAN LUIS POTOSI'
+            if province == 'DISTRITO FEDERAL':
+                province = 'MEXICO CITY'
 
         if countryCode == 'TR' and city == 'CEKMEKOY':
             city = 'CEKMEKOEY'
-
-        if countryCode == 'US' and city == 'NEW YORK':
-            city = 'NEW YORK CITY'
-
-        if countryCode == 'US' and province == 'PA' and city == 'WARMINSTER':
-            city = 'WARMINSTER HEIGHTS'
-
-        if countryCode == 'US' and province =='MO' and city == 'LEES SUMMIT':
-            city = 'LEE\047S SUMMIT'
 
         if countryCode == 'NL' and province == 'NOORD-BRABANT':
             province = 'NORTH BRABANT'
@@ -470,17 +466,17 @@ def process_team_data():
             province = 'NACIONAL'
 
         if countryCode == 'IL':
-            #if (prov=="HAMERKAZ (CENTRAL)") prov="CENTRAL DISTRICT";
-            #if (prov=="HAZAFON (NORTHERN)") prov="NORTHERN DISTRICT";
-            #if (prov=="HADAROM (SOUTHERN)") prov="SOUTHERN DISTRICT";
-            #if (prov=="TEL-AVIV") prov="TEL AVIV";
+            # Israel has multiple names for administrative divisions, so this
+            # scraper just ignores them completely.
             province = 'IL'
 
         if countryCode == 'JP' and len(zipCode) == 7:
+            # For Japan, separate first three and last four digits with a dash
+            # (e.g., 1234567 becomes 123-4567)
             f'{zipCode[0:3]}-{zipCode[3:7]}'
 
         if countryCode == 'CA':
-            # special for Canada
+            # special for Canada, only first three digits of zip code
             zipCode = zipCode[0:3]
         # ======== end of special fixes ========
 
@@ -567,7 +563,7 @@ def process_team_data():
         # replaces put each team on its own line. It looks like this:
         # [
         #   # ...more teams...
-        #   {"team_number": 404, "lat": 0.000, "lng": 0.000},
+        #   {"team_number": 404, "lat": 1.234, "lng": 5.678},
         #   # ...more teams...
         # ]
         # This is compact but readable (making it easy to tell what changed
