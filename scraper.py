@@ -40,10 +40,23 @@ from cachecontrol.caches import FileCache
 Define constants that the program uses
 """
 
-AUTH_KEY = Path('TBA-auth').read_text().strip()
+# Load the auth key
+AUTH_PATH = Path('TBA-auth')
+if not AUTH_PATH.exists():
+    print('Error: the TBA-auth file does not exist!')
+    print('You must generate a Read API authorization key on The Blue')
+    print('Alliance website. This can be done at:')
+    print('https://www.thebluealliance.com/account')
+    print('Place the generated Read API Key in the file TBA-auth.')
+    sys.exit()
 
+AUTH_KEY = AUTH_PATH.read_text().strip()
+
+# Load the lear from the YEAR file
 YEAR = Path('YEAR').read_text().strip()
+print(f'Downloaded data for year {YEAR}')
 
+# The directory where downloaded GeoNames data is cached
 CACHE_DIR = Path.cwd() / 'cache'
 
 # When the lattitude/longitude location of a place cannot be found, it is put
@@ -126,7 +139,7 @@ Function definitions
 
 # Downloads and unzips all the information from GeoNames into CACHE_DIR
 def get_geonames_data():
-    print ("Downloading GeoNames data...")
+    print ('Downloading GeoNames data...')
 
     for file in POSTAL_FILES:
         print(f'Downloading {file[0]}...')
@@ -146,14 +159,14 @@ def get_geonames_data():
 
         # If the file is a zip file, extract it to the data directory
         if file[2]:
-            print("Unzipping...")
+            print('Unzipping...')
             with ZipFile(path, 'r') as zip:
                 zip.extractall(CACHE_DIR)
 
 
 # Loads all the GeoNames data from the downloaded files
 def load_geonames_data():
-    print("Loading GeoNames data...")
+    print('Loading GeoNames data...')
 
     """ Definitions """
     global geoNames
@@ -173,7 +186,7 @@ def load_geonames_data():
 
 
     """ Initialize the country codes table """
-    print ("Loading country code mappings...")
+    print ('Loading country code mappings...')
     geoNames['ccodes'] = {}
 
     # Fill in the country codes table with data from CACHE_DIR/countryInfo.txt
@@ -195,7 +208,7 @@ def load_geonames_data():
         longitude coordinates for every zip code of every country in
         allCountries.txt.
     """
-    print("Loading zip code locations...")
+    print('Loading zip code locations...')
     geoNames['zipLocs'] = {}
 
     # Fill in the zipLocs table with data from CACHE_DIR/allCountries.txt
@@ -226,7 +239,7 @@ def load_geonames_data():
         administrative division code US.AK maps to the name Alaska. These
         mappings come from admin1CodesASCII.txt
     """
-    print ("Loading administrative division names...")
+    print ('Loading administrative division names...')
     geoNames['adms'] = {}
 
     def proccessAdminCodes(row):
@@ -264,7 +277,7 @@ def load_geonames_data():
             # ... more countries
         }
     """
-    print ("Loading city locations...")
+    print ('Loading city locations...')
     geoNames['cities'] = {}
 
     # Load the lattitude and longitude for each city in cities1000.txt and put
@@ -328,9 +341,9 @@ def load_geonames_data():
         the actual location of the team by looking at information
         on TBA, etc., and then finding the lat/lng coordinates on
         Google Maps. The user is walked through this when running
-        the fix_locations script.
+        the ask_google script.
     """
-    print ("Loading manually cached locations...")
+    print ('Loading manually cached locations...')
     geoNames['googLocs'] = { }
 
     # geo_cache file format:
@@ -348,7 +361,7 @@ def load_geonames_data():
 def get_team_data():
     global teamData
 
-    print("Downloading team data from The Blue Alliance...")
+    print('Downloading team data from The Blue Alliance...')
     teamData = tba.teams(page=None, year=YEAR)
 
 

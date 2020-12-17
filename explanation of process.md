@@ -1,7 +1,7 @@
 # Here's what happens:
 
 ## New Process:
-[scraper.py](scraper.py) contains all code for the program. Please refer to the inline comments for documentation. The program uses the Python library tbapy (`pip3 install tbapy`) to get data from The Blue Alliance. The program was build on Python 3. Some adjustments to the process have been made that make more sense in Python. For example, instead of having separate ziplats and ziplngs tables, there is one table called zipLocs that contains both lattitude and longitude data for each location.
+[scraper.py](scraper.py) contains all code for the program (except for ask_google, which is still used as previously to find broken locations). Please refer to the inline comments for documentation. The program uses the Python library tbapy (`pip3 install tbapy`) to get data from The Blue Alliance. The program was built on Python 3. Some adjustments to the process have been made that make more sense in Python. For example, instead of having separate ziplats and ziplngs tables, there is one table called zipLocs that contains both lattitude and longitude data for each location. The `attribs` file has been replaced with a list called `TEAM_ATTRIBS` near the top of `scraper.py`.
 
 List of what replaces what:
  - ./get_postal is replaced by the get_geonames_data and load_geonames_data function.
