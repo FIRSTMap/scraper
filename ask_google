@@ -4,11 +4,11 @@
 # time between calls to avoid robot blockage
 awk -F\0 '
     {
-       system("wget -Odata/google " \
+       system("wget -Ocache/google " \
               "\"https://www.google.com/maps/place/" $0 "\"");
-       "awk -F, -f make_latlng data/google" | getline lng;
-       "awk -F, -f make_latlng data/google" | getline lat;
-       close("awk -F, -f make_latlng data/google"); 
+       "awk -F, -f make_latlng cache/google" | getline lng;
+       "awk -F, -f make_latlng cache/google" | getline lat;
+       close("awk -F, -f make_latlng cache/google");
        printf "%s|%.3f|%.3f\n",$0,lat,lng;
        system(sprintf("sleep %d",3+10*rand()));
-    }' cache/broken_places 
+    }' cache/broken_places
