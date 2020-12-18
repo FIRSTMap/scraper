@@ -1,14 +1,17 @@
 # Here's what happens:
 
 ## New Process:
-[scraper.py](scraper.py) contains all code for the program (except for ask_google, which is still used as previously to find broken locations). Please refer to the inline comments for documentation. The program uses the Python library tbapy (`pip3 install tbapy`) to get data from The Blue Alliance. The program was built on Python 3. Some adjustments to the process have been made that make more sense in Python. For example, instead of having separate ziplats and ziplngs tables, there is one table called zipLocs that contains both lattitude and longitude data for each location. The `attribs` file has been replaced with a list called `TEAM_ATTRIBS` near the top of `scraper.py`.
+[scraper.py](scraper.py) contains all code for the program (except for ask_google, which is still used as previously to find broken locations). Please refer to the inline comments for documentation. The program uses the Python library tbapy (`pip3 install tbapy`) to get data from The Blue Alliance. The program was built on Python 3. Some adjustments to the process have been made that make more sense in Python. For example, instead of having separate ziplats and ziplngs tables, there is one table called zipLocs that contains both lattitude and longitude data for each location.
 
 List of what replaces what:
- - ./get_postal is replaced by the get_geonames_data and load_geonames_data function.
+ - ./get_postal is replaced by the `get_geonames_data` and `load_geonames_data` functions.
  - ./get_events is obsolete.
- - ./get_lists and ./merge_lists are replaced by tbapy, which is used in the get_team_data function.
- - ./merge_lists is replaced by the load_geonames_data and process_team_data functions.
- - The unicodes.ascii file is replaced by the strip_unicode function.
+ - ./get_lists and ./merge_lists are replaced by tbapy, which is used in the `get_team_data` function.
+ - ./merge_lists is replaced by the `load_geonames_data` and `process_team_data` functions.
+ - The `unicodes.ascii` file is replaced by the `strip_unicode` function.
+ - The `attribs` file has been replaced with a list called `TEAM_ATTRIBS` near the top of `scraper.py`.
+
+For more detailed documentation of how the scraper words, consult the comments (and the code) in (scraper.py)[scraper.py].
 
 ## Old Process:
 This process was written with commit [a54b2a6](https://github.com/FIRSTMap/scraper/commit/a54b2a6422ca2a3eb879927a95f30b4784cf31f7), so all references to lines in files are from then. HOWEVER, merge_lists needed the year updated to the year in the `YEAR` file (2020 as of now), otherwise merge_lists will fail.
