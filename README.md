@@ -19,6 +19,12 @@ The scraper was built on Python 3.8.
 4. Manually find any places that could not be found (such as by using
    ask_google, which works some of the time).
 
+If the program has to be run multiple times in a row (such as to make
+adjustments to it, correct issues, etc.), the program can be called with the
+`usecache` argument to reuse the already-downloaded GeoNames files instead of
+taking the time to redownload them every time. Example usage:
+`python scraper.py usecache`
+
 ## Descriptions of Files
 
 **README.md** - This file.
