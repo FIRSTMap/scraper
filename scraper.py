@@ -28,13 +28,10 @@ import re
 import sys
 import unicodedata
 from pathlib import Path
-from urllib import request
 from zipfile import ZipFile
 
 import requests
 import tbapy
-from cachecontrol import CacheControl
-from cachecontrol.caches import FileCache
 
 """
 Define constants that the program uses
@@ -127,7 +124,12 @@ elif CACHE_DIR.is_file():
     print('Please delete the file!')
     sys.exit()
 
-cache = CacheControl(requests.Session(), cache=FileCache(CACHE_DIR / '.geo_cache'))
+# If the command line argument usecache is specified, this will be set to True,
+# and any GeoNames files that have already been downloaded to the cache
+# directory will be used instead of redownloading them. The point of this is to
+# not have to redownload the Geonames data every time if the program has to be
+# run several times in a row to resolve issues, etc.
+useCache = False
 
 # Delete the current broken_places file if it exists
 if BROKEN_PLACES_FILE.exists():
@@ -139,6 +141,7 @@ Function definitions
 
 # Downloads and unzips all the information from GeoNames into CACHE_DIR
 def get_geonames_data():
+    global useCache
     print ('Downloading GeoNames data...')
 
     for file in POSTAL_FILES:
@@ -146,16 +149,18 @@ def get_geonames_data():
 
         path = CACHE_DIR / file[1]
 
-        # Download the file from the URL and save it. Download in
+        # Download the file from the URL and save it (except in cache mode,
+        # where the already-downloaded file is used if it exists). Download in
         # streaming mode so the entire file is not loaded into memory
         # before saving.
-        with cache.get(file[0], stream=True) as req:
-            # If there is an error downloading, just crash
-            req.raise_for_status()
+        if not useCache or not path.exists():
+            with requests.get(file[0], stream=True) as req:
+                # If there is an error downloading, just crash
+                req.raise_for_status()
 
-            with open(path, 'wb') as writer:
-                for chunk in req.iter_content(chunk_size=16384):
-                    writer.write(chunk)
+                with open(path, 'wb') as writer:
+                    for chunk in req.iter_content(chunk_size=16384):
+                        writer.write(chunk)
 
         # If the file is a zip file, extract it to the data directory
         if file[2]:
@@ -593,6 +598,14 @@ def process_team_data():
         output = json.dumps(longShortTeamList, indent=4)
         outFull.write(output)
 
+
+# If the program is run with the command line argument usecache, any of the
+# GeoNames files that have already been downloaded to the cache directory will
+# be used instead of redownloading them. The purpose of this is to not have to
+# redownload the Geonames data every time if the program has to be run several
+# times in a row to resolve issues, etc.
+if len(sys.argv) > 1 and sys.argv[1].lower() == 'usecache'.lower():
+    useCache = True
 
 get_geonames_data()
 load_geonames_data()
