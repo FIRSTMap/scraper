@@ -1,26 +1,7 @@
 #!/usr/bin/env python3
 """
-MIT License
-
-Copyright (c) 2020 Ethan Shaw
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Lincensed under the MIT License.
+See LICENSE file for more information.
 """
 
 import json
@@ -49,14 +30,14 @@ if not AUTH_PATH.exists():
 
 AUTH_KEY = AUTH_PATH.read_text().strip()
 
-# Load the lear from the YEAR file
+# Load the year from the YEAR file
 YEAR = Path('YEAR').read_text().strip()
 print(f'Downloaded data for year {YEAR}')
 
 # The directory where downloaded GeoNames data is cached
 CACHE_DIR = Path.cwd() / 'cache'
 
-# When the lattitude/longitude location of a place cannot be found, it is put
+# When the latitude/longitude location of a place cannot be found, it is put
 # into the broken_places file. This file is deleted (and recreated if needed)
 # with each run of the scraper.
 BROKEN_PLACES_FILE = CACHE_DIR / 'broken_places'
@@ -120,7 +101,8 @@ geoNames = {}
 if not CACHE_DIR.exists():
     CACHE_DIR.mkdir()
 elif CACHE_DIR.is_file():
-    print(f'Error: file "{str(CACHE_DIR)}" exists where the cache directory is supposed to be created!')
+    print(f'Error: file "{str(CACHE_DIR)}" exists where the cache directory'
+        + ' is supposed to be created!')
     print('Please delete the file!')
     sys.exit()
 
@@ -142,7 +124,7 @@ Function definitions
 # Downloads and unzips all the information from GeoNames into CACHE_DIR
 def get_geonames_data():
     global useCache
-    print ('Downloading GeoNames data...')
+    print('Downloading GeoNames data...')
 
     for file in POSTAL_FILES:
         print(f'Downloading {file[0]}...')
@@ -191,7 +173,7 @@ def load_geonames_data():
 
 
     """ Initialize the country codes table """
-    print ('Loading country code mappings...')
+    print('Loading country code mappings...')
     geoNames['ccodes'] = {}
 
     # Fill in the country codes table with data from CACHE_DIR/countryInfo.txt
@@ -209,7 +191,7 @@ def load_geonames_data():
 
 
     """
-        Initialize the zipLocs dictionary, which contains lattitude and
+        Initialize the zipLocs dictionary, which contains latitude and
         longitude coordinates for every zip code of every country in
         allCountries.txt.
     """
@@ -218,7 +200,7 @@ def load_geonames_data():
 
     # Fill in the zipLocs table with data from CACHE_DIR/allCountries.txt
     # The first key is the country code (row[0]), the second key is the zip
-    # (row[1]), and row[9] and row[10] are lattitude and longitude coordinates,
+    # (row[1]), and row[9] and row[10] are latitude and longitude coordinates,
     # respectively.
     def processZipDataCol(row):
         # Name the country and zip all uppercase (some zip codes have letters)
@@ -244,7 +226,7 @@ def load_geonames_data():
         administrative division code US.AK maps to the name Alaska. These
         mappings come from admin1CodesASCII.txt
     """
-    print ('Loading administrative division names...')
+    print('Loading administrative division names...')
     geoNames['adms'] = {}
 
     def proccessAdminCodes(row):
@@ -258,12 +240,12 @@ def load_geonames_data():
 
 
     """
-        Initialize the cities dictionary, which holds the lattitude and
+        Initialize the cities dictionary, which holds the latitude and
         longitude coordinates for each city in cities1000.txt. The dictionary
         is actually a dictionary with country names as the keys, where each key
         maps to a dictionary with state/province names as keys, where each key
         maps to a dictionary with cities as keys, where each key maps to a
-        dictionary with a lat and lng entry for the lattitude and longitude of
+        dictionary with a lat and lng entry for the latitude and longitude of
         that city.
 
         In other words, the format is:
@@ -282,10 +264,10 @@ def load_geonames_data():
             # ... more countries
         }
     """
-    print ('Loading city locations...')
+    print('Loading city locations...')
     geoNames['cities'] = {}
 
-    # Load the lattitude and longitude for each city in cities1000.txt and put
+    # Load the latitude and longitude for each city in cities1000.txt and put
     # them in geoNames['cities']
     def proccessCities(row):
         cityNameAscii = row[2].upper()
@@ -299,7 +281,7 @@ def load_geonames_data():
         if not adminNameAscii:
             return
         
-        # This helper function puts the lattitude and longitude of the city
+        # This helper function puts the latitude and longitude of the city
         # into the cities table (see comment at the beginning of this section
         # for information about the format of the cities table)
         def setLatLng(country, state, city):
@@ -314,7 +296,7 @@ def load_geonames_data():
                 'lng': row[5]
             }
         
-        # Set the lattitude and longitude of the city for the current row
+        # Set the latitude and longitude of the city for the current row
         setLatLng(countryCode, adminNameAscii, cityNameAscii)
         
         if countryCode == 'TW':
@@ -348,11 +330,11 @@ def load_geonames_data():
         Google Maps. The user is walked through this when running
         the ask_google script.
     """
-    print ('Loading manually cached locations...')
-    geoNames['googLocs'] = { }
+    print('Loading manually cached locations...')
+    geoNames['googLocs'] = {}
 
     # geo_cache file format:
-    # place name|lattitude coordinate|logitude coordinate
+    # place name|latitude coordinate|longitude coordinate
     def processGeoCache(row):
         geoNames['googLocs'][row[0]] = {
             'lat': row[1],
@@ -381,9 +363,9 @@ def strip_unicode(str):
     # cannot be represented in ascii, thus removing the special combining characters
     # but leaving behind the regular ones. The resulting binary is then decoded back
     # into utf-8.
-    return unicodedata.normalize('NFD', str)\
-                .encode('ascii', 'ignore')\
-                .decode('utf-8')
+    return (unicodedata.normalize('NFD', str)
+                .encode('ascii', 'ignore')
+                .decode('utf-8'))
 
 
 # Process all of the data that has been downloaded and write it to teams.json
@@ -421,7 +403,7 @@ def process_team_data():
         # Needs to be uppercase (postal codes in some countries have letters)
         zipCode = zipCode.upper()
 
-        # ====== special fixes for Guam, zip weirdness, and some typoes ======
+        # ====== special fixes for Guam, zip weirdness, and some typos ======
         if not countryCode and zipCode:
             # If there is no country code, determine it by the format of the
             # postal code.
@@ -456,14 +438,11 @@ def process_team_data():
                 city = 'NEW YORK CITY'
             elif province == 'PA' and city == 'WARMINSTER':
                 city = 'WARMINSTER HEIGHTS'
-            elif province =='MO' and city == 'LEES SUMMIT':
+            elif province == 'MO' and city == 'LEES SUMMIT':
                 city = "LEE'S SUMMIT"
         
         if countryCode == 'CL' and province == 'REGION METROPOLITANA DE SANTIAGO':
             province = 'SANTIAGO METROPOLITAN'
-
-        if countryCode == 'CN' and province == 'HUNAN':
-            province = 'HENAN'
         
         if countryCode == 'GR' and province == 'THESSALIA':
             province = 'THESSALY'
@@ -498,10 +477,10 @@ def process_team_data():
             zipCode = zipCode[0:3]
         # ======== end of special fixes ========
 
-        # The lattitude and longitude coordinates of the team
+        # The latitude and longitude coordinates of the team
         lat = lng = None
 
-        # Retrieve the lattitude and longitude of the team from the zip code,
+        # Retrieve the latitude and longitude of the team from the zip code,
         # if available.
         zipCountry = geoNames['zipLocs'].get(countryCode)
 
@@ -514,7 +493,7 @@ def process_team_data():
 
         # If the location was not retrieved...
         if lat is None and countryCode in geoNames['cities']:
-            # Retrieve the lattitude and longitude of the team from the city,
+            # Retrieve the latitude and longitude of the team from the city,
             # state/provice/administrative division, and country code
             cityCountry = geoNames['cities'][countryCode]
 
@@ -587,10 +566,10 @@ def process_team_data():
         # This is compact but readable (making it easy to tell what changed
         # when looking at a diff), but the main reason I format it this way is
         # that this was the format on the previous scraper.
-        output = json.dumps(shortTeamList)\
-            .replace('[{','[\n\t{')\
-            .replace('}, ', '},\n\t')\
-            .replace('}]','}\n]')
+        output = (json.dumps(shortTeamList)
+            .replace('[{', '[\n\t{')
+            .replace('}, ', '},\n\t')
+            .replace('}]', '}\n]'))
         out.write(output)
 
     with open(Path.cwd() / 'teamFullInfo.json', 'w') as outFull:
