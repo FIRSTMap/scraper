@@ -1,4 +1,4 @@
 *.json
 cache/
 .vscode
-TBA-auth
+tba_token.txt
