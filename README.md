@@ -5,19 +5,20 @@ This scraper is likely to be a high-maintenance item, as there are a number
 of hacks to work around incomplete team info from thebluealliance and
 differences between place names in different databases. This scraper makes use
 of [FRC 1418's tbapy](https://github.com/frc1418/tbapy), a Python wrapper for
-The Blue Alliance API.
+The Blue Alliance API. Location data for most places is downloaded from
+GeoNames, but manually entered data comes from Google Maps.
 
 The scraper was built on Python 3.8.
 
 ## Usage:
 1. Copy/extract/clone the files to a directory.
-2. Install the tbapy and lockfile libraries (`pip3 install tbapy lockfile`).
+2. Install the tbapy library (`pip3 install tbapy`).
 3. Get a Read API Key from TheBlueAlliance.com/account and put it in a file
-   called `TBA-auth`.
-3. Run "python scraper.py" (assuming you already have Python 3 installed; if
+   called `tba_token.txt`.
+3. Run `python scraper.py` (assuming you already have Python 3 installed; if
    not, install it).
 4. Manually find any places that could not be found (such as by using
-   ask_google, which works some of the time).
+   `ask_google`, which works some of the time).
 
 If the program has to be run multiple times in a row (such as to make
 adjustments to it, correct issues, etc.), the program can be called with the
@@ -25,9 +26,15 @@ adjustments to it, correct issues, etc.), the program can be called with the
 taking the time to redownload them every time. Example usage:
 `python scraper.py usecache`
 
-## Descriptions of Files
+The scraper creates a `teams.json` file, which goes into the `data` 
+directory of FIRSTMap. This file contains teams' latitude and longitude 
+coordinates. The file `teamFullInfo.json` is also created, which, in 
+addition to locations, also contains the attributes listed in the 
+scraper's `TEAM_ATTRIBS` constant. For more detailed documentation of 
+how the scraper works, consult the comments and code in 
+(scraper.py)[scraper.py].
 
-**README.md** - This file.
+## Descriptions of Files
 
 **[scraper.py](scraper.py)** - The scraper python script, which gets the postal
 code data, location data, and team data from GeoNames and TheBlueAlliance and
@@ -49,18 +56,12 @@ from previous calls to ask_google and other sources.
 **[make_latlng](make_latlng)** - Extracts the lat/lon from a google place file.
 Called from ask_google.
 
-**TBA-auth** - A file containing a TheBlueAlliance (TBA)
+**tba_token.txt** - A file containing a TheBlueAlliance (TBA)
 authorization token. This is not in the repository, but is required for the
 scraper to function. The user is expected to get a token from TheBlueAlliance.
 A logged-in TBA user can create a Read API Key from the Account page. It simply
-needs to be pasted into a file called TBA-auth. This is used by the scraper to
-access TheBlueAlliance API.
+needs to be pasted into a file called `tba_token.txt`. This is used by the
+scraper to access TheBlueAlliance API.
 
 **[YEAR](YEAR)** - A file containing the current year for purposes of
 retrieving team lists from thebluealliance.com.
-
-**[explanation of process.md](explanation%20of%20process.md)** - This file
-contains some details reguarding the changes made between the old scraper and
-the new scraper. It was mostly created to assist in rewriting the scraper in
-Python. Most of the documentation of how the new process works is found in
-the code comments of [scraper.py](scraper.py).
