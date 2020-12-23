@@ -43,8 +43,10 @@ BROKEN_PLACES_FILE = CACHE_DIR / 'broken_places'
 
 
 class GeoNamesFile():
-    """A helper class to hold the url and name of a GeoNames file as
-    well as if it needs to be unzipped after download."""
+    """
+    A helper class to hold the url and name of a GeoNames file as
+    well as if it needs to be unzipped after download.
+    """
 
     def __init__(self, url, name, unzip):
         self.url = url
@@ -139,8 +141,10 @@ if BROKEN_PLACES_FILE.exists():
 #
 
 def get_geonames_data(use_cache):
-    """Download and unzips all the information from GeoNames into
-    CACHE_DIR."""
+    """
+    Download and unzips all the information from GeoNames into
+    CACHE_DIR.
+    """
     print('Downloading GeoNames data...')
 
     for file in POSTAL_FILES:
@@ -169,7 +173,7 @@ def get_geonames_data(use_cache):
 
 
 def load_geonames_data():
-    """Load all the GeoNames data from the downloaded files"""
+    """Load all the GeoNames data from the downloaded files."""
     print('Loading GeoNames data...')
 
     #
@@ -247,14 +251,14 @@ def load_geonames_data():
     print('Loading administrative division names...')
     geo_names['adms'] = {}
 
-    def proccess_admin_codes(row):
+    def process_admin_codes(row):
         # row[0] is the administrative division code, row[2] is the ASCII
         # encoded English name of the administrative division code. For
         # example, the ascii encoded name for São Paulo would be Sao Paulo (ã
         # is replaced with a)
         geo_names['adms'][row[0]] = row[2].upper()
 
-    read_tsv(CACHE_DIR / 'admin1CodesASCII.txt', proccess_admin_codes)
+    read_tsv(CACHE_DIR / 'admin1CodesASCII.txt', process_admin_codes)
 
     #
     # Initialize the cities dictionary, which holds the latitude and
@@ -286,14 +290,13 @@ def load_geonames_data():
 
     # Load the latitude and longitude for each city in cities1000.txt and put
     # them in geoNames['cities']
-    def proccess_cities(row):
+    def process_cities(row):
         city_name_ascii = row[2].upper()
         country_code = row[8]
         state_code = row[10]
         # Name of the administrative division (state, province, etc.)
         # See comment above about the adms dictionary for further explanation.
-        admin_name_ascii = geo_names['adms'].get(
-            f'{country_code}.{state_code}')
+        admin_name_ascii = geo_names['adms'].get(f'{country_code}.{state_code}')
 
         # Ignore nonexistant administrative divisions
         if not admin_name_ascii:
@@ -334,7 +337,7 @@ def load_geonames_data():
             for name in alt_names:
                 setLatLng(country_code, country_code, name)
 
-    read_tsv(CACHE_DIR / 'cities1000.txt', proccess_cities)
+    read_tsv(CACHE_DIR / 'cities1000.txt', process_cities)
 
     #
     # Load the coordinates from the geo_cache file that were
@@ -364,13 +367,13 @@ def load_geonames_data():
 
 
 def get_team_data(tba):
-    """Download all of the team information from The Blue Alliance"""
+    """Download all of the team information from The Blue Alliance."""
     print('Downloading team data from The Blue Alliance...')
     return tba.teams(page=None, year=YEAR)
 
 
 def strip_unicode(str):
-    """Replace unicode characters with ascii characters (e.g., replace é with e)"""
+    """Replace unicode characters with ascii characters (e.g., replace é with e)."""
     # Documentation for normalize function:
     # https://docs.python.org/3/library/unicodedata.html#unicodedata.normalize
     # Basically, (from what I understand) this splits the characters with accent
@@ -386,8 +389,10 @@ def strip_unicode(str):
 
 
 def process_team_data(geo_names, team_data):
-    """Process all of the data that has been downloaded and write it to
-    teams.json and teamFullInfo.json"""
+    """
+    Process all of the data that has been downloaded and write it to
+    teams.json and teamFullInfo.json.
+    """
     print('Processing and writing team info...')
 
     short_team_list = []
