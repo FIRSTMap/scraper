@@ -14,17 +14,17 @@ from zipfile import ZipFile
 import requests
 import tbapy
 
-"""
-Define constants that the program uses
-"""
+#
+# Define constants that the program uses
+#
 
 # Load the auth key
 AUTH_PATH = Path('tba_token.txt')
 if not AUTH_PATH.exists():
     print('Error: the tba_token.txt file does not exist! You must generate a'
-    + ' Read API authorization key on The Blue Alliance website. This can be'
-    + ' done at: https://www.thebluealliance.com/account. Place the generated'
-    + ' Read API Key in a file named tba_token.txt')
+          + ' Read API authorization key on The Blue Alliance website. This can be'
+          + ' done at: https://www.thebluealliance.com/account. Place the generated'
+          + ' Read API Key in a file named tba_token.txt')
     sys.exit()
 
 AUTH_KEY = AUTH_PATH.read_text().strip()
@@ -41,15 +41,19 @@ CACHE_DIR = Path.cwd() / 'cache'
 # with each run of the scraper.
 BROKEN_PLACES_FILE = CACHE_DIR / 'broken_places'
 
-# What GeoNames files to download, name to save them as (within
-# CACHE_DIR), and whether or not they need to be unzipped.
+
 class GeoNamesFile():
+    """A helper class to hold the url and name of a GeoNames file as
+    well as if it needs to be unzipped after download."""
+
     def __init__(self, url, name, unzip):
         self.url = url
         self.name = name
         self.unzip = unzip
 
 
+# What GeoNames files to download, name to save them as (within
+# CACHE_DIR), and whether or not they need to be unzipped.
 POSTAL_FILES = [
     GeoNamesFile(url='https://download.geonames.org/export/zip/allCountries.zip',
                  name='allCountries.zip',
@@ -110,30 +114,33 @@ EXTRA_COUNTRY_CODES = {
     'USA': 'US'
 }
 
+# The chunk size used when downloading files from GeoNames.
 DOWNLOAD_CHUNK_SIZE = 16384
 
+#
+# Initial program setup
+#
 
-"""
-Define global variables
-"""
 # Set up caching
 if not CACHE_DIR.exists():
     CACHE_DIR.mkdir()
 elif CACHE_DIR.is_file():
     print(f'Error: file "{str(CACHE_DIR)}" exists where the cache directory'
-        + ' is supposed to be created! Please delete the file!')
+          + ' is supposed to be created! Please delete the file!')
     sys.exit()
 
 # Delete the current broken_places file if it exists
 if BROKEN_PLACES_FILE.exists():
     BROKEN_PLACES_FILE.unlink()
 
-"""
-Function definitions
-"""
 
-# Downloads and unzips all the information from GeoNames into CACHE_DIR
+#
+# Function definitions
+#
+
 def get_geonames_data(use_cache):
+    """Download and unzips all the information from GeoNames into
+    CACHE_DIR."""
     print('Downloading GeoNames data...')
 
     for file in POSTAL_FILES:
@@ -161,11 +168,13 @@ def get_geonames_data(use_cache):
                 zip.extractall(CACHE_DIR)
 
 
-# Loads all the GeoNames data from the downloaded files
 def load_geonames_data():
+    """Load all the GeoNames data from the downloaded files"""
     print('Loading GeoNames data...')
 
-    """ Definitions """
+    #
+    # Definitions
+    #
     geo_names = {}
 
     # Function to read this specific format of TSV files GeoNames provides. It
@@ -181,30 +190,30 @@ def load_geonames_data():
                 row = line.split(sep)
                 callback(row)
 
-
-    """ Initialize the country codes table """
+    #
+    # Initialize the country codes table
+    #
     print('Loading country code mappings...')
     geo_names['ccodes'] = {}
 
     # Fill in the country codes table with data from CACHE_DIR/countryInfo.txt
     def process_ccode_row(row):
         geo_names['ccodes'][row[4]] = row[0]
-    
+
     read_tsv(CACHE_DIR / 'countryInfo.txt', process_ccode_row)
 
     # Add/replace additional country code mappings
     for country in EXTRA_COUNTRY_CODES:
         geo_names['ccodes'][country] = EXTRA_COUNTRY_CODES[country]
-    
+
     # Remove the empty string key from the table, if it exists
     geo_names['ccodes'].pop('', None)
 
-
-    """
-        Initialize the zipLocs dictionary, which contains latitude and
-        longitude coordinates for every zip code of every country in
-        allCountries.txt.
-    """
+    #
+    # Initialize the zipLocs dictionary, which contains latitude and
+    # longitude coordinates for every zip code of every country in
+    # allCountries.txt.
+    #
     print('Loading zip code locations...')
     geo_names['zipLocs'] = {}
 
@@ -220,7 +229,7 @@ def load_geonames_data():
         # If the country's entry doesn't exist, initialize it.
         if not ccode in geo_names['zipLocs']:
             geo_names['zipLocs'][ccode] = {}
-        
+
         # Assign the zip's lat and lng in the dictionary.
         geo_names['zipLocs'][ccode][zip] = {
             'lat': row[9],
@@ -229,13 +238,12 @@ def load_geonames_data():
 
     read_tsv(CACHE_DIR / 'allCountries.txt', process_zip_data_col)
 
-
-    """
-        Initialize the adms dictionary, which maps administrative division
-        codes to their ASCII encoded English names. For example, the
-        administrative division code US.AK maps to the name Alaska. These
-        mappings come from admin1CodesASCII.txt
-    """
+    #
+    # Initialize the adms dictionary, which maps administrative division
+    # codes to their ASCII encoded English names. For example, the
+    # administrative division code US.AK maps to the name Alaska. These
+    # mappings come from admin1CodesASCII.txt
+    #
     print('Loading administrative division names...')
     geo_names['adms'] = {}
 
@@ -248,32 +256,31 @@ def load_geonames_data():
 
     read_tsv(CACHE_DIR / 'admin1CodesASCII.txt', proccess_admin_codes)
 
-
-    """
-        Initialize the cities dictionary, which holds the latitude and
-        longitude coordinates for each city in cities1000.txt. The dictionary
-        is actually a dictionary with country names as the keys, where each key
-        maps to a dictionary with state/province names as keys, where each key
-        maps to a dictionary with cities as keys, where each key maps to a
-        dictionary with a lat and lng entry for the latitude and longitude of
-        that city.
-
-        In other words, the format is:
-
-        geoNames['cities'] = {
-            'United States': {
-                'New Hampshire': {
-                    'Manchester': {
-                        'lat': 42.99564,
-                        'lng': -71.45479
-                    }
-                    # ... more cities in New Hampshire
-                }
-                # ... more states in the US
-            }
-            # ... more countries
-        }
-    """
+    #
+    # Initialize the cities dictionary, which holds the latitude and
+    # longitude coordinates for each city in cities1000.txt. The dictionary
+    # is actually a dictionary with country names as the keys, where each key
+    # maps to a dictionary with state/province names as keys, where each key
+    # maps to a dictionary with cities as keys, where each key maps to a
+    # dictionary with a lat and lng entry for the latitude and longitude of
+    # that city.
+    #
+    # In other words, the format is:
+    #
+    # geoNames['cities'] = {
+    #     'United States': {
+    #         'New Hampshire': {
+    #             'Manchester': {
+    #                 'lat': 42.99564,
+    #                 'lng': -71.45479
+    #             }
+    #             # ... more cities in New Hampshire
+    #         }
+    #         # ... more states in the US
+    #     }
+    #     # ... more countries
+    # }
+    #
     print('Loading city locations...')
     geo_names['cities'] = {}
 
@@ -285,19 +292,20 @@ def load_geonames_data():
         state_code = row[10]
         # Name of the administrative division (state, province, etc.)
         # See comment above about the adms dictionary for further explanation.
-        admin_name_ascii = geo_names['adms'].get(f'{country_code}.{state_code}')
+        admin_name_ascii = geo_names['adms'].get(
+            f'{country_code}.{state_code}')
 
         # Ignore nonexistant administrative divisions
         if not admin_name_ascii:
             return
-        
+
         # This helper function puts the latitude and longitude of the city
         # into the cities table (see comment at the beginning of this section
         # for information about the format of the cities table)
         def setLatLng(country, state, city):
             if not country in geo_names['cities']:
                 geo_names['cities'][country] = {}
-            
+
             if not state in geo_names['cities'][country]:
                 geo_names['cities'][country][state] = {}
 
@@ -305,10 +313,10 @@ def load_geonames_data():
                 'lat': row[4],
                 'lng': row[5]
             }
-        
+
         # Set the latitude and longitude of the city for the current row
         setLatLng(country_code, admin_name_ascii, city_name_ascii)
-        
+
         if country_code == 'TW':
             # For Taiwan, use the city name for both the city name and
             # administrative division name (this is how the locations come from
@@ -328,18 +336,17 @@ def load_geonames_data():
 
     read_tsv(CACHE_DIR / 'cities1000.txt', proccess_cities)
 
-
-    """
-        Load the coordinates from the geo_cache file that were
-        manually obtained. Some team locations have to be manually
-        obtained because their locations cannot be resolved using
-        the GeoNames data alone, often due to incomplete data from
-        TBA. This usually involves the user of the scraper finding
-        the actual location of the team by looking at information
-        on TBA, etc., and then finding the lat/lng coordinates on
-        Google Maps. The user is walked through this when running
-        the ask_google script.
-    """
+    #
+    # Load the coordinates from the geo_cache file that were
+    # manually obtained. Some team locations have to be manually
+    # obtained because their locations cannot be resolved using
+    # the GeoNames data alone, often due to incomplete data from
+    # TBA. This usually involves the user of the scraper finding
+    # the actual location of the team by looking at information
+    # on TBA, etc., and then finding the lat/lng coordinates on
+    # Google Maps. The user is walked through this when running
+    # the ask_google script.
+    #
     print('Loading manually cached locations...')
     geo_names['googLocs'] = {}
 
@@ -356,14 +363,14 @@ def load_geonames_data():
     return geo_names
 
 
-# Downloads all of the team information from The Blue Alliance
 def get_team_data(tba):
+    """Download all of the team information from The Blue Alliance"""
     print('Downloading team data from The Blue Alliance...')
     return tba.teams(page=None, year=YEAR)
 
 
-# Replaces unicode characters with ascii characters (e.g., replace é with e)
 def strip_unicode(str):
+    """Replace unicode characters with ascii characters (e.g., replace é with e)"""
     # Documentation for normalize function:
     # https://docs.python.org/3/library/unicodedata.html#unicodedata.normalize
     # Basically, (from what I understand) this splits the characters with accent
@@ -374,13 +381,13 @@ def strip_unicode(str):
     # but leaving behind the regular ones. The resulting binary is then decoded back
     # into utf-8.
     return (unicodedata.normalize('NFD', str)
-                .encode('ascii', 'ignore')
-                .decode('utf-8'))
+            .encode('ascii', 'ignore')
+            .decode('utf-8'))
 
 
-# Process all of the data that has been downloaded and write it to teams.json
-# and teamFullInfo.json
 def process_team_data(geo_names, team_data):
+    """Process all of the data that has been downloaded and write it to
+    teams.json and teamFullInfo.json"""
     print('Processing and writing team info...')
 
     short_team_list = []
@@ -398,7 +405,7 @@ def process_team_data(geo_names, team_data):
         # because sometimes the city name comes with them.
         city_no_format = team.get('city') or ''
         city = strip_unicode(city_no_format.upper().strip(' '))
-        
+
         # Get the country code for the team's country.
         country_code = geo_names['ccodes'].get(team.get('country')) or ''
 
@@ -450,10 +457,10 @@ def process_team_data(geo_names, team_data):
                 city = 'WARMINSTER HEIGHTS'
             elif province == 'MO' and city == 'LEES SUMMIT':
                 city = "LEE'S SUMMIT"
-        
+
         if country_code == 'CL' and province == 'REGION METROPOLITANA DE SANTIAGO':
             province = 'SANTIAGO METROPOLITAN'
-        
+
         if country_code == 'GR' and province == 'THESSALIA':
             province = 'THESSALY'
 
@@ -496,7 +503,7 @@ def process_team_data(geo_names, team_data):
 
         if zip_country:
             zip_loc = zip_country.get(zip_code)
-            
+
             if zip_loc:
                 lat = zip_loc['lat']
                 lng = zip_loc['lng']
@@ -525,7 +532,7 @@ def process_team_data(geo_names, team_data):
             if goog_loc:
                 lat = goog_loc['lat']
                 lng = goog_loc['lng']
-        
+
         # If the location was STILL not retrieved...
         if lat is None:
             # Notify the user that the location was not found and needs to be
@@ -577,9 +584,9 @@ def process_team_data(geo_names, team_data):
         # when looking at a diff), but the main reason I format it this way is
         # that this was the format on the previous scraper.
         output = (json.dumps(short_team_list)
-            .replace('[{', '[\n\t{')
-            .replace('}, ', '},\n\t')
-            .replace('}]', '}\n]'))
+                  .replace('[{', '[\n\t{')
+                  .replace('}, ', '},\n\t')
+                  .replace('}]', '}\n]'))
         out.write(output)
 
     with open(Path.cwd() / 'teamFullInfo.json', 'w') as outFull:
