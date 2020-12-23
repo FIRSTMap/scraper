@@ -1,4 +1,4 @@
-Readme file for FIRSTMap Scraper
+FIRSTMap Scraper
 ===
 
 This scraper is likely to be a high-maintenance item, as there are a number
