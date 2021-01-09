@@ -497,6 +497,15 @@ def process_team_data(geo_names, team_data):
         if country_code == 'CA':
             # special for Canada, only first three digits of zip code
             zip_code = zip_code[0:3]
+            
+        if country_code == 'TW':
+            # This fixes certain locations in Taiwan where the province name has
+            # SPECIAL MUNICIPALITY or MUNICIPALITY tacked on the end some of the
+            # time.
+            if province.endswith(' SPECIAL MUNICIPALITY'):
+                province = province[:-len(' SPECIAL MUNICIPALITY')]
+            elif province.endswith(' MUNICIPALITY'):
+                province = province[:-len(' MUNICIPALITY')]
         # ======== end of special fixes ========
 
         # The latitude and longitude coordinates of the team
