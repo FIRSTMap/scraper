@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Lincensed under the MIT License.
+Licensed under the MIT License.
 See LICENSE file for more information.
 """
 
@@ -399,6 +399,10 @@ def process_team_data(geo_names, team_data):
     long_short_team_list = []
 
     for team in team_data:
+        # Skip the off-season demo teams 9970-9999 (inclusive)
+        if team.get('team_number') in range(9970, 10000):
+            continue
+
         # Only include the home_championship attribute for the current year
         home_champ = team.get('home_championship')
         if home_champ:
