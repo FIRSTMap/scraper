@@ -430,6 +430,17 @@ def process_team_data(geo_names, team_data):
         zip_code = zip_code.upper()
 
         # ====== special fixes for Guam, zip weirdness, and some typos ======
+        # A few special checks for Turkey
+        if (not country_code and province in ['ISTANBUL', 'KOCAELI','ANKARA',
+            'MANISA', 'IZMIR', 'ESKISEHIR', 'KAHRAMANMARAS', 'BURSA', 'KONYA',
+            'ANTALYA', 'SAMSUN', 'MERSIN', 'KARABUK', 'DIYARBAKIR', 'HATAY',
+            'MUGLA']): 
+            country_code = 'TR'
+        
+        # Netherlands
+        if (not country_code and province in ['NOORD-BRABANT']):
+            country_code = 'NL'
+
         if not country_code and zip_code:
             # If there is no country code, determine it by the format of the
             # postal code.
