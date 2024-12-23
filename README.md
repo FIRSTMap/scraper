@@ -15,7 +15,7 @@ The scraper was built on Python 3.8.
 2. Install the tbapy library (`pip3 install tbapy`).
 3. Get a Read API Key from TheBlueAlliance.com/account and put it in a file
    called `tba_token.txt`.
-3. Run `python scraper.py` (assuming you already have Python 3 installed; if
+3. Run `python scraper.py <year>` (assuming you already have Python 3 installed; if
    not, install it).
 4. Manually find any places that could not be found (such as by using
    `ask_google`, which works some of the time).
@@ -62,6 +62,3 @@ scraper to function. The user is expected to get a token from TheBlueAlliance.
 A logged-in TBA user can create a Read API Key from the Account page. It simply
 needs to be pasted into a file called `tba_token.txt`. This is used by the
 scraper to access TheBlueAlliance API.
-
-**[YEAR](YEAR)** - A file containing the current year for purposes of
-retrieving team lists from thebluealliance.com.
