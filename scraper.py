@@ -10,6 +10,8 @@ import sys
 import unicodedata
 from pathlib import Path
 from zipfile import ZipFile
+import argparse
+from datetime import datetime
 
 import requests
 import tbapy
@@ -28,10 +30,6 @@ if not AUTH_PATH.exists():
     sys.exit()
 
 AUTH_KEY = AUTH_PATH.read_text().strip()
-
-# Load the year from the YEAR file
-YEAR = Path('YEAR').read_text().strip()
-print(f'Downloaded data for year {YEAR}')
 
 # The directory where downloaded GeoNames data is cached
 CACHE_DIR = Path.cwd() / 'cache'
@@ -65,6 +63,9 @@ POSTAL_FILES = [
                  unzip=False),
     GeoNamesFile(url='https://download.geonames.org/export/dump/cities1000.zip',
                  name='cities1000.zip',
+                 unzip=True),
+    GeoNamesFile(url='https://download.geonames.org/export/dump/cities500.zip',
+                 name='cities500.zip',
                  unzip=True),
     GeoNamesFile(url='https://download.geonames.org/export/dump/readme.txt',
                  name='cities1000.readme',
@@ -113,7 +114,9 @@ TEAM_ATTRIBS = [
 EXTRA_COUNTRY_CODES = {
     'Chinese Taipei': 'TW',
     'Czech Republic': 'CZ',
-    'USA': 'US'
+    'USA': 'US',
+    'Türkiye': 'TR',
+    'Netherlands': 'NL'
 }
 
 # The chunk size used when downloading files from GeoNames.
@@ -337,7 +340,7 @@ def load_geonames_data():
             for name in alt_names:
                 setLatLng(country_code, country_code, name)
 
-    read_tsv(CACHE_DIR / 'cities1000.txt', process_cities)
+    read_tsv(CACHE_DIR / 'cities500.txt', process_cities)
 
     #
     # Load the coordinates from the geo_cache file that were
@@ -430,17 +433,6 @@ def process_team_data(geo_names, team_data):
         zip_code = zip_code.upper()
 
         # ====== special fixes for Guam, zip weirdness, and some typos ======
-        # A few special checks for Turkey
-        if (not country_code and province in ['ISTANBUL', 'KOCAELI','ANKARA',
-            'MANISA', 'IZMIR', 'ESKISEHIR', 'KAHRAMANMARAS', 'BURSA', 'KONYA',
-            'ANTALYA', 'SAMSUN', 'MERSIN', 'KARABUK', 'DIYARBAKIR', 'HATAY',
-            'MUGLA']): 
-            country_code = 'TR'
-        
-        # Netherlands
-        if (not country_code and province in ['NOORD-BRABANT']):
-            country_code = 'NL'
-
         if not country_code and zip_code:
             # If there is no country code, determine it by the format of the
             # postal code.
@@ -631,12 +623,26 @@ def process_team_data(geo_names, team_data):
 # times in a row to resolve issues, etc.
 use_cache = False
 
-if len(sys.argv) > 1 and sys.argv[1].lower() == 'usecache'.lower():
-    use_cache = True
+parser = argparse.ArgumentParser()
+parser.add_argument("year",
+                    help="The year to download teams for (default: current year).",
+                    type=int,
+                    nargs="?")
+parser.add_argument("--use-cache",
+                    help="Do not re-download GeoNames data if already downloaded (used to save time during debugging).",
+                    action="store_true")
+results = parser.parse_args()
 
 tba = tbapy.TBA(AUTH_KEY)
 
-get_geonames_data(use_cache)
+if results.year is None:
+    YEAR = datetime.now().year
+else:
+    YEAR = results.year
+
+print(f"Resolving team locations for year {YEAR}...")
+
+get_geonames_data(results.use_cache)
 geo_names = load_geonames_data()
 team_data = get_team_data(tba)
 process_team_data(geo_names, team_data)
