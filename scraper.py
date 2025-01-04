@@ -561,7 +561,7 @@ def process_team_data(geo_names, team_data):
             # (the file is emptied at the beginning of the script).
             print(f'Did not find team {team.get("key")} @ place {place}')
 
-            with open(BROKEN_PLACES_FILE, 'a') as broken_places:
+            with open(BROKEN_PLACES_FILE, 'a', newline="\n") as broken_places:
                 broken_places.write(place + '\n')
 
             lat = 0
